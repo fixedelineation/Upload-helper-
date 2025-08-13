@@ -48,50 +48,32 @@
             padding: 30px;
         }
         
-        .input-section {
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f7fafc;
             margin-bottom: 20px;
         }
         
-        .input-group {
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #edf2ff;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
             margin-bottom: 20px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-        }
-        
-        .input-group input[type="text"] {
-            width: 100%;
-            max-width: 300px;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        .input-group input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .csv-input {
-            width: 100%;
-            min-height: 300px;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-        }
-        
-        .csv-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: #f8f9ff;
         }
         
         .btn {
@@ -125,10 +107,17 @@
             background: #e53e3e;
         }
         
-        .output-section {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #e2e8f0;
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0fff4;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+            display: none;
         }
         
         .stats {
@@ -222,6 +211,13 @@
         .instructions li {
             margin: 5px 0;
         }
+
+        .output-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -233,55 +229,46 @@
         
         <div class="content">
             <div class="instructions">
-                <h3>📋 How to use</h3>
+                <h3>📋 Instructions</h3>
                 <ul>
-                    <li>Enter the Cost Center (this would normally be your filename without .csv)</li>
-                    <li>Paste your CSV data with project rows and monthly columns</li>
-                    <li>The tool will extract the 18-digit ID from URLs in column B</li>
-                    <li>Each month's revenue will become a separate row</li>
+                    <li>Upload your CSV file with project data (months as columns)</li>
+                    <li>The filename will be used as the Cost Center (e.g., CC100902.csv)</li>
+                    <li>Each monthly revenue will become a separate row</li>
+                    <li>18-digit IDs will be extracted from URLs in column B</li>
                     <li>Update keys will be generated automatically</li>
-                    <li>Output filename format: CostCenter_upload_ready_YYYY-MM-DD.csv</li>
+                    <li>Download the transformed file ready for upload</li>
                 </ul>
             </div>
             
-            <div class="input-section">
-                <div class="input-group">
-                    <label for="costCenter">Cost Center (e.g., CC100902):</label>
-                    <input type="text" id="costCenter" placeholder="Enter cost center code">
-                </div>
-                
-                <div class="input-group">
-                    <label for="csvInput">Paste your CSV data here:</label>
-                    <textarea id="csvInput" class="csv-input" placeholder="Paste your CSV content here...
-Example:
-Date - Year,,,,,,2025,2025,2025...
-MonthShortName,,,,,,Jan,Feb,Mar...
-ID,SF,Pursuit / Project Name,Liaison,practice,Stage,100,200,300..."></textarea>
-                </div>
-                
-                <button class="btn" onclick="transformData()">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <p><strong>Click to upload or drag & drop your CSV file</strong></p>
+                <p style="margin-top: 10px; color: #718096;">Accepts .csv files only</p>
+                <input type="file" id="fileInput" class="file-input" accept=".csv">
+            </div>
+            
+            <div id="fileInfo" class="file-info"></div>
+            
+            <div style="text-align: center;">
+                <button id="transformBtn" class="btn" style="display: none;" onclick="transformData()">
                     🔄 Transform Data
                 </button>
-                <button class="btn btn-danger" onclick="clearAll()">
-                    🗑️ Clear All
+                <button id="resetBtn" class="btn btn-danger" style="display: none;" onclick="resetApp()">
+                    🔄 Start Over
                 </button>
             </div>
             
-            <div id="outputSection" class="output-section" style="display: none;">
+            <div id="outputSection" class="output-section">
                 <h3>✅ Transformed Data</h3>
                 <div id="stats" class="stats"></div>
-                <div class="input-group">
-                    <label>Copy this CSV data or download as file:</label>
-                    <textarea id="csvOutput" class="csv-input" readonly></textarea>
-                </div>
-                <button class="btn btn-secondary" onclick="downloadCSV()">
-                    ⬇️ Download as CSV file
-                </button>
-                <button class="btn" onclick="copyToClipboard()">
-                    📋 Copy to Clipboard
-                </button>
                 
-                <h4 style="margin-top: 30px;">Preview (first 10 rows):</h4>
+                <div style="text-align: center; margin: 20px 0;">
+                    <button id="downloadBtn" class="btn btn-secondary" onclick="downloadCSV()">
+                        ⬇️ Download Transformed CSV
+                    </button>
+                </div>
+                
+                <h4>Preview (first 10 rows):</h4>
                 <div id="preview" class="preview-container"></div>
             </div>
             
@@ -290,23 +277,72 @@ ID,SF,Pursuit / Project Name,Liaison,practice,Stage,100,200,300..."></textarea>
     </div>
 
     <script>
+        let originalData = null;
         let transformedData = [];
+        let fileName = '';
+        let costCenter = '';
 
-        function extractSFID(url) {
-            // Extract 18-character ID from URL
-            if (!url) return '';
-            const match = url.match(/[a-zA-Z0-9]{18}/);
-            return match ? match[0] : '';
+        // Setup event listeners
+        document.getElementById('uploadArea').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+        // Drag and drop
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.csv')) {
+                handleFile(files[0]);
+            } else {
+                showMessage('Please upload a .csv file', 'error');
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
         }
 
-        function getMonthName(monthAbbr) {
-            const monthMap = {
-                'jan': 'January', 'feb': 'February', 'mar': 'March', 'apr': 'April',
-                'may': 'May', 'jun': 'June', 'jul': 'July', 'aug': 'August',
-                'sep': 'September', 'oct': 'October', 'nov': 'November', 'dec': 'December'
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                showMessage('Please upload a .csv file', 'error');
+                return;
+            }
+
+            fileName = file.name;
+            costCenter = fileName.replace('.csv', '');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    originalData = parseCSV(text);
+                    displayFileInfo(file);
+                    document.getElementById('transformBtn').style.display = 'inline-block';
+                    document.getElementById('resetBtn').style.display = 'inline-block';
+                    showMessage('File uploaded successfully!', 'success');
+                } catch (error) {
+                    showMessage('Error reading file: ' + error.message, 'error');
+                }
             };
-            const lower = monthAbbr.toLowerCase();
-            return monthMap[lower] || monthAbbr;
+            reader.readAsText(file);
         }
 
         function parseCSV(csvText) {
@@ -324,244 +360,4 @@ ID,SF,Pursuit / Project Name,Liaison,practice,Stage,100,200,300..."></textarea>
                     
                     if (char === '"') {
                         inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        row.push(current.trim());
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                row.push(current.trim());
-                rows.push(row);
-            }
-            
-            return rows;
-        }
-
-        function transformData() {
-            const costCenter = document.getElementById('costCenter').value.trim();
-            const csvInput = document.getElementById('csvInput').value.trim();
-            
-            if (!costCenter) {
-                showMessage('Please enter a Cost Center', 'error');
-                return;
-            }
-            
-            if (!csvInput) {
-                showMessage('Please paste CSV data', 'error');
-                return;
-            }
-            
-            try {
-                const rows = parseCSV(csvInput);
-                
-                // Find the year row and month row
-                let yearRow = null;
-                let monthRow = null;
-                let dataStartRow = null;
-                
-                for (let i = 0; i < Math.min(5, rows.length); i++) {
-                    const row = rows[i];
-                    // Check for year row (contains multiple year values like 2025, 2026)
-                    if (row.some(cell => cell === '2025' || cell === '2026' || cell === '2024')) {
-                        yearRow = row;
-                    }
-                    // Check for month row
-                    if (row.some(cell => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].includes(cell))) {
-                        monthRow = row;
-                        dataStartRow = i + 1;
-                        break;
-                    }
-                }
-                
-                if (!yearRow || !monthRow || !dataStartRow) {
-                    showMessage('Could not find year/month headers in the CSV data', 'error');
-                    return;
-                }
-                
-                transformedData = [];
-                const headers = ['SFID', 'CostCenter', 'Month', 'Year', 'Fee_Estimate__c', 'UpdateKey__c', 'practice group'];
-                
-                // Process each data row
-                for (let i = dataStartRow; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row || row.length < 6) continue;
-                    
-                    // Extract data from fixed columns
-                    const urlColumn = row[1] || ''; // Column B - URL with SFID
-                    const practiceGroup = row[4] || ''; // Column E - practice group
-                    
-                    // Skip if no URL
-                    if (!urlColumn) continue;
-                    
-                    const sfid = extractSFID(urlColumn);
-                    if (!sfid) continue;
-                    
-                    // Process each month column (starting from column 6/index 5)
-                    for (let j = 6; j < row.length; j++) {
-                        const revenue = row[j];
-                        if (!revenue || revenue === '0' || revenue === '') continue;
-                        
-                        const month = monthRow[j];
-                        const year = yearRow[j];
-                        
-                        if (!month || !year) continue;
-                        
-                        const monthName = getMonthName(month);
-                        const updateKey = `${sfid}${costCenter}${monthName}${year}${practiceGroup}`;
-                        
-                        transformedData.push({
-                            SFID: sfid,
-                            CostCenter: costCenter,
-                            Month: monthName,
-                            Year: year,
-                            Fee_Estimate__c: revenue,
-                            UpdateKey__c: updateKey,
-                            'practice group': practiceGroup
-                        });
-                    }
-                }
-                
-                if (transformedData.length === 0) {
-                    showMessage('No data to transform. Check that your CSV has valid data.', 'error');
-                    return;
-                }
-                
-                displayOutput();
-                showMessage(`Successfully transformed ${transformedData.length} rows!`, 'success');
-                
-            } catch (error) {
-                showMessage('Error transforming data: ' + error.message, 'error');
-                console.error(error);
-            }
-        }
-
-        function displayOutput() {
-            // Show output section
-            document.getElementById('outputSection').style.display = 'block';
-            
-            // Generate CSV output
-            const csvLines = [];
-            const headers = ['SFID', 'CostCenter', 'Month', 'Year', 'Fee_Estimate__c', 'UpdateKey__c', 'practice group'];
-            csvLines.push(headers.join(','));
-            
-            for (let row of transformedData) {
-                const line = headers.map(h => row[h] || '').join(',');
-                csvLines.push(line);
-            }
-            
-            const csvOutput = csvLines.join('\n');
-            document.getElementById('csvOutput').value = csvOutput;
-            
-            // Display stats
-            const uniqueProjects = new Set(transformedData.map(r => r.SFID)).size;
-            const totalRows = transformedData.length;
-            const uniqueMonths = new Set(transformedData.map(r => `${r.Month} ${r.Year}`)).size;
-            
-            document.getElementById('stats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${totalRows}</div>
-                    <div class="stat-label">Total Rows</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${uniqueProjects}</div>
-                    <div class="stat-label">Projects</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${uniqueMonths}</div>
-                    <div class="stat-label">Months</div>
-                </div>
-            `;
-            
-            // Display preview table
-            let tableHTML = '<table class="preview-table"><thead><tr>';
-            for (let header of headers) {
-                tableHTML += `<th>${header}</th>`;
-            }
-            tableHTML += '</tr></thead><tbody>';
-            
-            for (let i = 0; i < Math.min(10, transformedData.length); i++) {
-                tableHTML += '<tr>';
-                for (let header of headers) {
-                    tableHTML += `<td>${transformedData[i][header] || ''}</td>`;
-                }
-                tableHTML += '</tr>';
-            }
-            
-            tableHTML += '</tbody></table>';
-            document.getElementById('preview').innerHTML = tableHTML;
-        }
-
-        function downloadCSV() {
-            const csvContent = document.getElementById('csvOutput').value;
-            const costCenter = document.getElementById('costCenter').value.trim();
-            
-            // Get current date in YYYY-MM-DD format
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            
-            // Create filename: CostCenter_upload_ready_YYYY-MM-DD.csv
-            const filename = `${costCenter}_upload_ready_${dateStr}.csv`;
-            
-            // Create blob with BOM for Excel compatibility
-            const BOM = '\uFEFF';
-            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-            
-            // Create download link
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Clean up
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-            
-            showMessage(`File downloaded: ${filename}`, 'success');
-        }
-
-        function copyToClipboard() {
-            const csvOutput = document.getElementById('csvOutput');
-            csvOutput.select();
-            csvOutput.setSelectionRange(0, 99999); // For mobile devices
-            
-            try {
-                document.execCommand('copy');
-                showMessage('Copied to clipboard!', 'success');
-            } catch (err) {
-                showMessage('Failed to copy. Please select and copy manually.', 'error');
-            }
-        }
-
-        function clearAll() {
-            document.getElementById('costCenter').value = '';
-            document.getElementById('csvInput').value = '';
-            document.getElementById('csvOutput').value = '';
-            document.getElementById('outputSection').style.display = 'none';
-            document.getElementById('messages').innerHTML = '';
-            transformedData = [];
-        }
-
-        function showMessage(message, type) {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = `<div class="${type}">${message}</div>`;
-            
-            // Auto-clear success messages after 3 seconds
-            if (type === 'success') {
-                setTimeout(() => {
-                    messagesDiv.innerHTML = '';
-                }, 3000);
-            }
-        }
-    </script>
-</body>
-</html>
+                    } else if (char === ',' && !inQuotes)
